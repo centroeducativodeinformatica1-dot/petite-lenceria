@@ -8,25 +8,16 @@ import { db } from '../../lib/firebase'
 import { uploadImage } from '../../lib/cloudinary'
 import AdminLayout from '../../components/admin/AdminLayout'
 import toast from 'react-hot-toast'
-import { FiPlus, FiEdit2, FiTrash2, FiX, FiUpload, FiImage } from 'react-icons/fi'
+import { FiPlus, FiEdit2, FiTrash2, FiX, FiUpload, FiImage, FiPackage, FiTag, FiDollarSign } from 'react-icons/fi'
 import styles from '../../styles/AdminProducts.module.css'
 
 const EMPTY_PRODUCT = {
-  nombre: '',
-  precio: '',
-  descripcion: '',
-  categoria: '',
-  estado: 'activo',
-  imagen: '',
-  stock: ''
+  nombre: '', precio: '', descripcion: '',
+  categoria: '', estado: 'activo', imagen: '', stock: ''
 }
 
 const formatPrice = (p) =>
-  new Intl.NumberFormat('es-AR', {
-    style: 'currency',
-    currency: 'ARS',
-    maximumFractionDigits: 0
-  }).format(p)
+  new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(p)
 
 export default function AdminProducts() {
   const [products, setProducts] = useState([])
@@ -56,11 +47,8 @@ export default function AdminProducts() {
   }
 
   const closeModal = () => {
-    setModal(false)
-    setEditing(null)
-    setForm(EMPTY_PRODUCT)
-    setImageFile(null)
-    setImagePreview(null)
+    setModal(false); setEditing(null)
+    setForm(EMPTY_PRODUCT); setImageFile(null); setImagePreview(null)
   }
 
   const handleImageChange = (e) => {
@@ -71,23 +59,15 @@ export default function AdminProducts() {
   }
 
   const handleSave = async () => {
-    if (!form.nombre || !form.precio) {
-      return toast.error('Nombre y precio son obligatorios')
-    }
+    if (!form.nombre || !form.precio) return toast.error('Nombre y precio son obligatorios')
     setSaving(true)
     try {
       let imageUrl = form.imagen
-      if (imageFile) {
-        imageUrl = await uploadImage(imageFile)
-      }
+      if (imageFile) imageUrl = await uploadImage(imageFile)
       const data = {
-        nombre: form.nombre,
-        precio: Number(form.precio),
-        descripcion: form.descripcion,
-        categoria: form.categoria,
-        estado: form.estado,
-        imagen: imageUrl,
-        // Si no se completa stock, se guarda como null (sin restricción)
+        nombre: form.nombre, precio: Number(form.precio),
+        descripcion: form.descripcion, categoria: form.categoria,
+        estado: form.estado, imagen: imageUrl,
         stock: form.stock !== '' ? Number(form.stock) : null
       }
       if (editing) {
@@ -99,8 +79,7 @@ export default function AdminProducts() {
       }
       closeModal()
     } catch (e) {
-      console.error(e)
-      toast.error('Error al guardar')
+      console.error(e); toast.error('Error al guardar')
     } finally {
       setSaving(false)
     }
@@ -111,12 +90,9 @@ export default function AdminProducts() {
     try {
       await deleteDoc(doc(db, 'products', id))
       toast.success('Producto eliminado')
-    } catch {
-      toast.error('Error al eliminar')
-    }
+    } catch { toast.error('Error al eliminar') }
   }
 
-  // Indicador visual de stock para la tarjeta admin
   const stockLabel = (p) => {
     if (p.stock === null || p.stock === undefined) return null
     if (p.stock === 0) return { text: 'Sin stock', color: '#ef4444' }
@@ -127,7 +103,6 @@ export default function AdminProducts() {
   return (
     <AdminLayout>
       <div>
-        {/* Header */}
         <div className={styles.header}>
           <h1 className={styles.title}>Productos</h1>
           <button className="btn-primary" onClick={() => openModal()}>
@@ -135,11 +110,8 @@ export default function AdminProducts() {
           </button>
         </div>
 
-        {/* Grid de productos */}
         {loading ? (
-          <div style={{ textAlign: 'center', padding: '60px', color: 'var(--gray-400)' }}>
-            Cargando productos...
-          </div>
+          <div style={{ textAlign: 'center', padding: '60px', color: 'var(--gray-400)' }}>Cargando...</div>
         ) : products.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '60px', color: 'var(--gray-400)' }}>
             <FiImage size={40} style={{ marginBottom: 12, opacity: 0.3 }} />
@@ -152,46 +124,20 @@ export default function AdminProducts() {
               return (
                 <div key={p.id} className={styles.productCard}>
                   <div className={styles.productImageWrap}>
-                    {p.imagen ? (
-                      <img src={p.imagen} alt={p.nombre} className={styles.productImage} />
-                    ) : (
-                      <div className={styles.productImagePlaceholder}>
-                        <FiImage size={32} />
-                      </div>
-                    )}
+                    {p.imagen
+                      ? <img src={p.imagen} alt={p.nombre} className={styles.productImage} />
+                      : <div className={styles.productImagePlaceholder}><FiImage size={32} /></div>
+                    }
                     <div className={styles.productActions}>
-                      <button
-                        className={styles.actionBtn}
-                        onClick={() => openModal(p)}
-                        title="Editar"
-                      >
-                        <FiEdit2 size={14} />
-                      </button>
-                      <button
-                        className={`${styles.actionBtn} ${styles.actionBtnDelete}`}
-                        onClick={() => handleDelete(p.id)}
-                        title="Eliminar"
-                      >
-                        <FiTrash2 size={14} />
-                      </button>
+                      <button className={styles.actionBtn} onClick={() => openModal(p)} title="Editar"><FiEdit2 size={14} /></button>
+                      <button className={`${styles.actionBtn} ${styles.actionBtnDelete}`} onClick={() => handleDelete(p.id)} title="Eliminar"><FiTrash2 size={14} /></button>
                     </div>
                   </div>
                   <div className={styles.productInfo}>
-                    {p.categoria && (
-                      <span className={styles.productCategory}>{p.categoria}</span>
-                    )}
+                    {p.categoria && <span className={styles.productCategory}>{p.categoria}</span>}
                     <span className={styles.productName}>{p.nombre}</span>
                     <span className={styles.productPrice}>{formatPrice(p.precio)}</span>
-                    {sl && (
-                      <span style={{
-                        fontSize: 11,
-                        fontWeight: 600,
-                        color: sl.color,
-                        marginTop: 2
-                      }}>
-                        {sl.text}
-                      </span>
-                    )}
+                    {sl && <span style={{ fontSize: 11, fontWeight: 600, color: sl.color, marginTop: 2 }}>{sl.text}</span>}
                   </div>
                 </div>
               )
@@ -199,135 +145,98 @@ export default function AdminProducts() {
           </div>
         )}
 
-        {/* Modal */}
         {modal && (
           <div className={styles.overlay} onClick={(e) => e.target === e.currentTarget && closeModal()}>
             <div className={styles.modal}>
+
               <div className={styles.modalHeader}>
-                <h2 className={styles.modalTitle}>
-                  {editing ? 'Editar producto' : 'Nuevo producto'}
-                </h2>
-                <button className={styles.closeBtn} onClick={closeModal}>
-                  <FiX size={20} />
-                </button>
+                <h2 className={styles.modalTitle}>{editing ? '✏️ Editar producto' : '🌸 Nuevo producto'}</h2>
+                <button className={styles.closeBtn} onClick={closeModal}><FiX size={18} /></button>
               </div>
 
               <div className={styles.modalBody}>
-                {/* Nombre y Precio */}
-                <div className={styles.formRow} style={{ marginBottom: 16 }}>
-                  <div className="form-group">
-                    <label className="form-label">Nombre *</label>
-                    <input
-                      className="form-input"
-                      placeholder="Ej: Conjunto de encaje"
-                      value={form.nombre}
-                      onChange={(e) => setForm({ ...form, nombre: e.target.value })}
-                    />
+
+                {/* Info básica */}
+                <div className={styles.formSection}>
+                  <p className={styles.formSectionTitle}>Información básica</p>
+                  <div className={styles.formRow} style={{ marginBottom: 14 }}>
+                    <div>
+                      <label className={styles.formLabel}>Nombre *</label>
+                      <input className={styles.formInput} placeholder="Ej: Conjunto de encaje"
+                        value={form.nombre} onChange={(e) => setForm({ ...form, nombre: e.target.value })} />
+                    </div>
+                    <div>
+                      <label className={styles.formLabel}>Categoría</label>
+                      <input className={styles.formInput} placeholder="Ej: Conjuntos, Corpiños..."
+                        value={form.categoria} onChange={(e) => setForm({ ...form, categoria: e.target.value })} />
+                    </div>
                   </div>
-                  <div className="form-group">
-                    <label className="form-label">Precio *</label>
-                    <input
-                      className="form-input"
-                      type="number"
-                      placeholder="Ej: 15000"
-                      value={form.precio}
-                      onChange={(e) => setForm({ ...form, precio: e.target.value })}
-                    />
+                  <div>
+                    <label className={styles.formLabel}>Descripción</label>
+                    <textarea className={styles.formInput} rows={3} placeholder="Descripción del producto..."
+                      value={form.descripcion} onChange={(e) => setForm({ ...form, descripcion: e.target.value })}
+                      style={{ resize: 'vertical' }} />
                   </div>
                 </div>
 
-                {/* Categoría y Estado */}
-                <div className={styles.formRow} style={{ marginBottom: 16 }}>
-                  <div className="form-group">
-                    <label className="form-label">Categoría</label>
-                    <input
-                      className="form-input"
-                      placeholder="Ej: Conjuntos, Corpiños..."
-                      value={form.categoria}
-                      onChange={(e) => setForm({ ...form, categoria: e.target.value })}
-                    />
+                {/* Precio, stock, estado */}
+                <div className={styles.formSection}>
+                  <p className={styles.formSectionTitle}>Precio y disponibilidad</p>
+                  <div className={styles.formRow}>
+                    <div>
+                      <label className={styles.formLabel}>Precio (ARS) *</label>
+                      <input className={styles.formInput} type="number" placeholder="Ej: 15000"
+                        value={form.precio} onChange={(e) => setForm({ ...form, precio: e.target.value })} />
+                    </div>
+                    <div>
+                      <label className={styles.formLabel}>Estado</label>
+                      <select className={styles.formInput} value={form.estado}
+                        onChange={(e) => setForm({ ...form, estado: e.target.value })}>
+                        <option value="activo">✅ Activo</option>
+                        <option value="inactivo">⏸ Inactivo</option>
+                      </select>
+                    </div>
                   </div>
-                  <div className="form-group">
-                    <label className="form-label">Estado</label>
-                    <select
-                      className="form-input"
-                      value={form.estado}
-                      onChange={(e) => setForm({ ...form, estado: e.target.value })}
-                    >
-                      <option value="activo">Activo</option>
-                      <option value="inactivo">Inactivo</option>
-                    </select>
+                  <div style={{ marginTop: 14 }}>
+                    <label className={styles.formLabel}>Stock</label>
+                    <div className={styles.stockInputWrap}>
+                      <input className={styles.stockInput} type="number" min="0" placeholder="Ej: 10"
+                        value={form.stock} onChange={(e) => setForm({ ...form, stock: e.target.value })} />
+                      {form.stock !== '' && Number(form.stock) === 0 &&
+                        <span style={{ fontSize: 12, color: '#ef4444', fontWeight: 600 }}>⚠️ Se ocultará del catálogo</span>}
+                      {form.stock !== '' && Number(form.stock) > 0 && Number(form.stock) <= 3 &&
+                        <span style={{ fontSize: 12, color: '#f59e0b', fontWeight: 600 }}>⚡ Stock bajo</span>}
+                      {form.stock === '' &&
+                        <span style={{ fontSize: 12, color: '#aaa' }}>Dejá vacío = sin límite</span>}
+                    </div>
+                    <p className={styles.formHint}>Al llegar a 0, desaparece automáticamente del catálogo.</p>
                   </div>
-                </div>
-
-                {/* Stock */}
-                <div className="form-group" style={{ marginBottom: 16 }}>
-                  <label className="form-label">
-                    Stock{' '}
-                    <span style={{ fontWeight: 400, color: 'var(--gray-400)', fontSize: 12 }}>
-                      (dejá vacío si no querés controlar stock)
-                    </span>
-                  </label>
-                  <input
-                    className="form-input"
-                    type="number"
-                    min="0"
-                    placeholder="Ej: 10"
-                    value={form.stock}
-                    onChange={(e) => setForm({ ...form, stock: e.target.value })}
-                    style={{ maxWidth: 160 }}
-                  />
-                  <p style={{ fontSize: 12, color: 'var(--gray-400)', marginTop: 4 }}>
-                    Cuando llegue a 0, el producto desaparece del catálogo automáticamente.
-                  </p>
-                </div>
-
-                {/* Descripción */}
-                <div className="form-group" style={{ marginBottom: 16 }}>
-                  <label className="form-label">Descripción</label>
-                  <textarea
-                    className="form-input"
-                    rows={3}
-                    placeholder="Descripción del producto..."
-                    value={form.descripcion}
-                    onChange={(e) => setForm({ ...form, descripcion: e.target.value })}
-                    style={{ resize: 'vertical' }}
-                  />
                 </div>
 
                 {/* Imagen */}
-                <div className="form-group">
-                  <label className="form-label">Imagen</label>
-                  <label className={styles.uploadBtn} style={{ display: 'inline-flex', cursor: 'pointer' }}>
+                <div className={styles.formSection}>
+                  <p className={styles.formSectionTitle}>Imagen del producto</p>
+                  <label className={styles.uploadBtn} style={{ cursor: 'pointer' }}>
                     <FiUpload size={14} />
                     {imageFile ? imageFile.name : 'Seleccionar imagen'}
-                    <input
-                      type="file"
-                      accept="image/*"
-                      style={{ display: 'none' }}
-                      onChange={handleImageChange}
-                    />
+                    <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleImageChange} />
                   </label>
                   {imagePreview && (
-                    <div style={{ marginTop: 10 }}>
+                    <div style={{ marginTop: 12 }}>
                       <img src={imagePreview} alt="Preview" className={styles.currentImage} />
                     </div>
                   )}
                 </div>
+
               </div>
 
               <div className={styles.modalFooter}>
-                <button className="btn-secondary" onClick={closeModal}>
-                  Cancelar
-                </button>
-                <button
-                  className="btn-primary"
-                  onClick={handleSave}
-                  disabled={saving}
-                >
+                <button className="btn-secondary" onClick={closeModal}>Cancelar</button>
+                <button className="btn-primary" onClick={handleSave} disabled={saving}>
                   {saving ? 'Guardando...' : editing ? 'Guardar cambios' : 'Crear producto'}
                 </button>
               </div>
+
             </div>
           </div>
         )}
