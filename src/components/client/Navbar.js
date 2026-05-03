@@ -1,10 +1,11 @@
 // src/components/client/Navbar.js
 import { useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { useRouter } from 'next/router'
 import { useAuth } from '../../hooks/useAuth'
 import { useCart } from '../../hooks/useCart'
-import { FiShoppingBag, FiUser, FiLogOut, FiMenu, FiX } from 'react-icons/fi'
+import { FiShoppingBag, FiUser, FiLogOut } from 'react-icons/fi'
 import styles from './Navbar.module.css'
 
 export default function Navbar() {
@@ -22,8 +23,25 @@ export default function Navbar() {
     <nav className={styles.nav}>
       <div className={styles.inner}>
         <Link href="/" className={styles.logo}>
-          <span className={styles.logoText}>Petite Sorciere</span>
-          <span className={styles.logoSub}>Lencería</span>
+          {/* 
+            LOGO: colocá tu imagen en /public/logo.png
+            Si no tenés imagen todavía, se muestra el texto como fallback.
+            Cambiá width/height según las proporciones de tu logo.
+          */}
+          <Image
+            src="/logo.png"
+            alt="Petite Sorciere Lencería"
+            width={140}
+            height={50}
+            style={{ objectFit: 'contain' }}
+            onError={(e) => { e.target.style.display = 'none' }}
+            priority
+          />
+          {/* Fallback de texto — se puede borrar una vez que tengas el logo */}
+          <noscript>
+            <span className={styles.logoText}>Petite Sorciere</span>
+            <span className={styles.logoSub}>Lencería</span>
+          </noscript>
         </Link>
 
         <div className={styles.actions}>

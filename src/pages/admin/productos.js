@@ -17,7 +17,8 @@ const EMPTY_PRODUCT = {
   descripcion: '',
   categoria: '',
   estado: 'activo',
-  imagen: ''
+  imagen: '',
+  stock: ''
 }
 
 const formatPrice = (p) =>
@@ -48,7 +49,7 @@ export default function AdminProducts() {
 
   const openModal = (product = null) => {
     setEditing(product?.id || null)
-    setForm(product ? { ...product } : EMPTY_PRODUCT)
+    setForm(product ? { ...product, stock: product.stock ?? '' } : EMPTY_PRODUCT)
     setImageFile(null)
     setImagePreview(product?.imagen || null)
     setModal(true)
@@ -85,7 +86,9 @@ export default function AdminProducts() {
         descripcion: form.descripcion,
         categoria: form.categoria,
         estado: form.estado,
-        imagen: imageUrl
+        imagen: imageUrl,
+        // Si no se completa stock, se guarda como null (sin restricción)
+        stock: form.stock !== '' ? Number(form.stock) : null
       }
       if (editing) {
         await updateDoc(doc(db, 'products', editing), data)
@@ -113,6 +116,14 @@ export default function AdminProducts() {
     }
   }
 
+  // Indicador visual de stock para la tarjeta admin
+  const stockLabel = (p) => {
+    if (p.stock === null || p.stock === undefined) return null
+    if (p.stock === 0) return { text: 'Sin stock', color: '#ef4444' }
+    if (p.stock <= 3) return { text: `Stock: ${p.stock}`, color: '#f59e0b' }
+    return { text: `Stock: ${p.stock}`, color: '#10b981' }
+  }
+
   return (
     <AdminLayout>
       <div>
@@ -136,42 +147,55 @@ export default function AdminProducts() {
           </div>
         ) : (
           <div className={styles.grid}>
-            {products.map((p) => (
-              <div key={p.id} className={styles.productCard}>
-                <div className={styles.productImageWrap}>
-                  {p.imagen ? (
-                    <img src={p.imagen} alt={p.nombre} className={styles.productImage} />
-                  ) : (
-                    <div className={styles.productImagePlaceholder}>
-                      <FiImage size={32} />
+            {products.map((p) => {
+              const sl = stockLabel(p)
+              return (
+                <div key={p.id} className={styles.productCard}>
+                  <div className={styles.productImageWrap}>
+                    {p.imagen ? (
+                      <img src={p.imagen} alt={p.nombre} className={styles.productImage} />
+                    ) : (
+                      <div className={styles.productImagePlaceholder}>
+                        <FiImage size={32} />
+                      </div>
+                    )}
+                    <div className={styles.productActions}>
+                      <button
+                        className={styles.actionBtn}
+                        onClick={() => openModal(p)}
+                        title="Editar"
+                      >
+                        <FiEdit2 size={14} />
+                      </button>
+                      <button
+                        className={`${styles.actionBtn} ${styles.actionBtnDelete}`}
+                        onClick={() => handleDelete(p.id)}
+                        title="Eliminar"
+                      >
+                        <FiTrash2 size={14} />
+                      </button>
                     </div>
-                  )}
-                  <div className={styles.productActions}>
-                    <button
-                      className={styles.actionBtn}
-                      onClick={() => openModal(p)}
-                      title="Editar"
-                    >
-                      <FiEdit2 size={14} />
-                    </button>
-                    <button
-                      className={`${styles.actionBtn} ${styles.actionBtnDelete}`}
-                      onClick={() => handleDelete(p.id)}
-                      title="Eliminar"
-                    >
-                      <FiTrash2 size={14} />
-                    </button>
+                  </div>
+                  <div className={styles.productInfo}>
+                    {p.categoria && (
+                      <span className={styles.productCategory}>{p.categoria}</span>
+                    )}
+                    <span className={styles.productName}>{p.nombre}</span>
+                    <span className={styles.productPrice}>{formatPrice(p.precio)}</span>
+                    {sl && (
+                      <span style={{
+                        fontSize: 11,
+                        fontWeight: 600,
+                        color: sl.color,
+                        marginTop: 2
+                      }}>
+                        {sl.text}
+                      </span>
+                    )}
                   </div>
                 </div>
-                <div className={styles.productInfo}>
-                  {p.categoria && (
-                    <span className={styles.productCategory}>{p.categoria}</span>
-                  )}
-                  <span className={styles.productName}>{p.nombre}</span>
-                  <span className={styles.productPrice}>{formatPrice(p.precio)}</span>
-                </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         )}
 
@@ -234,6 +258,28 @@ export default function AdminProducts() {
                       <option value="inactivo">Inactivo</option>
                     </select>
                   </div>
+                </div>
+
+                {/* Stock */}
+                <div className="form-group" style={{ marginBottom: 16 }}>
+                  <label className="form-label">
+                    Stock{' '}
+                    <span style={{ fontWeight: 400, color: 'var(--gray-400)', fontSize: 12 }}>
+                      (dejá vacío si no querés controlar stock)
+                    </span>
+                  </label>
+                  <input
+                    className="form-input"
+                    type="number"
+                    min="0"
+                    placeholder="Ej: 10"
+                    value={form.stock}
+                    onChange={(e) => setForm({ ...form, stock: e.target.value })}
+                    style={{ maxWidth: 160 }}
+                  />
+                  <p style={{ fontSize: 12, color: 'var(--gray-400)', marginTop: 4 }}>
+                    Cuando llegue a 0, el producto desaparece del catálogo automáticamente.
+                  </p>
                 </div>
 
                 {/* Descripción */}

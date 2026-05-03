@@ -23,7 +23,10 @@ export default function Home() {
           orderBy('createdAt', 'desc')
         )
         const snap = await getDocs(q)
-        const items = snap.docs.map((d) => ({ id: d.id, ...d.data() }))
+        // Filtrar productos con stock > 0 (o sin campo stock, para compatibilidad con productos viejos)
+        const items = snap.docs
+          .map((d) => ({ id: d.id, ...d.data() }))
+          .filter((p) => p.stock === undefined || p.stock === null || p.stock > 0)
         setProducts(items)
         const cats = ['Todos', ...new Set(items.map((p) => p.categoria).filter(Boolean))]
         setCategories(cats)
@@ -54,8 +57,8 @@ export default function Home() {
           <div className={styles.heroContent}>
             <p className={styles.heroEyebrow}>Nueva colección</p>
             <h1 className={styles.heroTitle}>
-              Elegancia íntima<br />
-              <em>hecha para vos</em>
+              Bienvenidxs a<br />
+              <em>Petite Sorciere</em>
             </h1>
             <p className={styles.heroSub}>
               Lencería seleccionada con amor para cada cuerpo y cada momento.

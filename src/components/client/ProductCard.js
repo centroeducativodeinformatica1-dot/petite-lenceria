@@ -1,6 +1,5 @@
 // src/components/client/ProductCard.js
 import { useState } from 'react'
-import Image from 'next/image'
 import { useCart } from '../../hooks/useCart'
 import { useAuth } from '../../hooks/useAuth'
 import { useRouter } from 'next/router'
@@ -14,7 +13,12 @@ export default function ProductCard({ product }) {
   const router = useRouter()
   const [added, setAdded] = useState(false)
 
+  // Si stock está definido y es 0, el producto no se muestra (ya se filtra en index.js,
+  // pero por seguridad lo controlamos también acá)
+  const sinStock = product.stock !== undefined && product.stock !== null && product.stock <= 0
+
   const handleAdd = () => {
+    if (sinStock) return
     if (!user) {
       toast.error('Iniciá sesión para agregar al carrito')
       router.push('/login')
@@ -29,6 +33,9 @@ export default function ProductCard({ product }) {
   const formatPrice = (p) =>
     new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(p)
 
+  // No renderizar si no hay stock (doble protección)
+  if (sinStock) return null
+
   return (
     <div className={styles.card}>
       <div className={styles.imageWrap}>
@@ -41,6 +48,22 @@ export default function ProductCard({ product }) {
         )}
         {product.categoria && (
           <span className={styles.categoryTag}>{product.categoria}</span>
+        )}
+        {/* Indicador de stock bajo (1-3 unidades) */}
+        {product.stock !== null && product.stock !== undefined && product.stock <= 3 && product.stock > 0 && (
+          <span style={{
+            position: 'absolute',
+            top: 8,
+            left: 8,
+            background: '#f59e0b',
+            color: '#fff',
+            fontSize: 11,
+            fontWeight: 700,
+            padding: '2px 8px',
+            borderRadius: 20,
+          }}>
+            ¡Últimas {product.stock}!
+          </span>
         )}
       </div>
       <div className={styles.body}>
