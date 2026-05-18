@@ -3,9 +3,31 @@ import { useState } from 'react'
 import { useCart } from '../../hooks/useCart'
 import { useAuth } from '../../hooks/useAuth'
 import { useRouter } from 'next/router'
+import Link from 'next/link'
 import toast from 'react-hot-toast'
-import { FiShoppingBag, FiCheck } from 'react-icons/fi'
 import styles from './ProductCard.module.css'
+
+// SVG Icons
+const IconBag = () => (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+    <line x1="3" y1="6" x2="21" y2="6"/>
+    <path d="M16 10a4 4 0 0 1-8 0"/>
+  </svg>
+)
+
+const IconCheck = () => (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="20 6 9 17 4 12"/>
+  </svg>
+)
+
+const IconEye = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+    <circle cx="12" cy="12" r="3"/>
+  </svg>
+)
 
 export default function ProductCard({ product }) {
   const { addItem } = useCart()
@@ -17,7 +39,9 @@ export default function ProductCard({ product }) {
   // pero por seguridad lo controlamos también acá)
   const sinStock = product.stock !== undefined && product.stock !== null && product.stock <= 0
 
-  const handleAdd = () => {
+  const handleAdd = (e) => {
+    e.preventDefault()
+    e.stopPropagation()
     if (sinStock) return
     if (!user) {
       toast.error('Iniciá sesión para agregar al carrito')
@@ -33,11 +57,10 @@ export default function ProductCard({ product }) {
   const formatPrice = (p) =>
     new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(p)
 
-  // No renderizar si no hay stock (doble protección)
   if (sinStock) return null
 
   return (
-    <div className={styles.card}>
+    <Link href={`/producto/${product.id}`} className={styles.card}>
       <div className={styles.imageWrap}>
         {product.imagen ? (
           <img src={product.imagen} alt={product.nombre} className={styles.image} />
@@ -49,22 +72,12 @@ export default function ProductCard({ product }) {
         {product.categoria && (
           <span className={styles.categoryTag}>{product.categoria}</span>
         )}
-        {/* Indicador de stock bajo (1-3 unidades) */}
         {product.stock !== null && product.stock !== undefined && product.stock <= 3 && product.stock > 0 && (
-          <span style={{
-            position: 'absolute',
-            top: 8,
-            left: 8,
-            background: '#f59e0b',
-            color: '#fff',
-            fontSize: 11,
-            fontWeight: 700,
-            padding: '2px 8px',
-            borderRadius: 20,
-          }}>
-            ¡Últimas {product.stock}!
-          </span>
+          <span className={styles.stockTag}>¡Últimas {product.stock}!</span>
         )}
+        <div className={styles.overlay}>
+          <span className={styles.overlayLabel}><IconEye /> Ver detalle</span>
+        </div>
       </div>
       <div className={styles.body}>
         <h3 className={styles.name}>{product.nombre}</h3>
@@ -77,11 +90,11 @@ export default function ProductCard({ product }) {
             className={`${styles.addBtn} ${added ? styles.addedBtn : ''}`}
             onClick={handleAdd}
           >
-            {added ? <FiCheck size={16} /> : <FiShoppingBag size={16} />}
+            {added ? <IconCheck /> : <IconBag />}
             {added ? 'Agregado' : 'Agregar'}
           </button>
         </div>
       </div>
-    </div>
+    </Link>
   )
 }
